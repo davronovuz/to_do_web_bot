@@ -1,4 +1,3 @@
-
 const taskInput = document.getElementById('taskInput');
 const taskList = document.getElementById('taskList');
 const totalTasksSpan = document.getElementById('totalTasks');
@@ -72,13 +71,13 @@ function updateStats() {
     completedTasksSpan.textContent = tasks.filter(task => task.completed).length;
 }
 
-// Sync tasks with bot
-function syncTasks() {
-    tg.sendData(JSON.stringify({ action: 'sync' }));
-}
+// Handle data from Telegram bot
+tg.onEvent('mainButtonClicked', () => {
+    tg.sendData(JSON.stringify({ action: 'sync', tasks }));
+});
 
-// Handle data from bot
-tg.MainButton.setText('Sync Tasks').show().onClick(syncTasks);
-
-// Initial sync
-syncTasks();
+// Load tasks from bot (example)
+tg.onEvent('receiveData', (data) => {
+    tasks = JSON.parse(data).tasks || [];
+    renderTasks();
+});
