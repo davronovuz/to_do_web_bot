@@ -1,16 +1,16 @@
+
 const taskInput = document.getElementById('taskInput');
 const taskList = document.getElementById('taskList');
 const totalTasksSpan = document.getElementById('totalTasks');
 const completedTasksSpan = document.getElementById('completedTasks');
-
 let tasks = [];
 
-// Telegram WebApp init
+// Telegram Web App initialization
 const tg = window.Telegram.WebApp;
 tg.ready();
-tg.expand(); // Full screen
+tg.expand();
 
-// Add new task
+// Add task
 function addTask() {
     const taskText = taskInput.value.trim();
     if (taskText === '') return;
@@ -25,37 +25,37 @@ function addTask() {
     taskInput.value = '';
     renderTasks();
 
+    // Send task to Telegram bot
     tg.sendData(JSON.stringify({ action: 'add', task }));
 }
 
-// Render all tasks
+// Render tasks
 function renderTasks() {
     taskList.innerHTML = '';
-
     tasks.forEach(task => {
         const li = document.createElement('li');
+        li.className = task.completed ? 'completed' : '';
         li.innerHTML = `
             <div class="task-content">
                 <input type="checkbox" ${task.completed ? 'checked' : ''} onclick="toggleTask(${task.id})">
-                <span style="${task.completed ? 'text-decoration: line-through; color: gray;' : ''}">
-                    ${task.text}
-                </span>
+                <span>${task.text}</span>
             </div>
-            <button onclick="deleteTask(${task.id})">O'chirish</button>
+            <div class="task-actions">
+                <button class="complete-btn" onclick="toggleTask(${task.id})">${task.completed ? 'Undo' : 'Complete'}</button>
+                <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+            </div>
         `;
         taskList.appendChild(li);
     });
-
     updateStats();
 }
 
-// Toggle task complete/incomplete
+// Toggle task completion
 function toggleTask(id) {
     tasks = tasks.map(task =>
         task.id === id ? { ...task, completed: !task.completed } : task
     );
     renderTasks();
-
     tg.sendData(JSON.stringify({ action: 'toggle', id }));
 }
 
@@ -63,24 +63,22 @@ function toggleTask(id) {
 function deleteTask(id) {
     tasks = tasks.filter(task => task.id !== id);
     renderTasks();
-
     tg.sendData(JSON.stringify({ action: 'delete', id }));
 }
 
-// Update task counters
+// Update stats
 function updateStats() {
     totalTasksSpan.textContent = tasks.length;
     completedTasksSpan.textContent = tasks.filter(task => task.completed).length;
 }
 
-// Sync button
+// Sync tasks with bot
 function syncTasks() {
     tg.sendData(JSON.stringify({ action: 'sync' }));
 }
 
-// Main button
-tg.MainButton.setText('Sinxronlash').show();
-tg.onEvent('mainButtonClicked', syncTasks);
+// Handle data from bot
+tg.MainButton.setText('Sync Tasks').show().onClick(syncTasks);
 
-// Auto sync on load
+// Initial sync
 syncTasks();
